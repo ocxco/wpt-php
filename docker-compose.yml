@@ -11,12 +11,7 @@ services:
 
 ### PHP-FPM ##############################################
     php-fpm:
-      build:
-        context: ./php-fpm
-        args:
-          - http_proxy
-          - https_proxy
-          - no_proxy
+      image: xuechaoc/wpt-php-7033:v1
       container_name: "php-fpm"
       volumes:
         - ./php-fpm/php7.0.ini:/usr/local/etc/php/php.ini
