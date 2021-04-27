@@ -1,0 +1,79 @@
+version: '3.5'
+
+networks:
+  backend:
+    driver: bridge
+volumes:
+  docker-in-docker:
+    driver: local
+
+services:
+
+### PHP-FPM ##############################################
+    php-fpm:
+      build:
+        context: ./php-fpm
+        args:
+          - http_proxy
+          - https_proxy
+          - no_proxy
+      container_name: "php-fpm"
+      volumes:
+        - ./php-fpm/php7.0.ini:/usr/local/etc/php/php.ini
+        - ~/workspace:/www
+        - ~/workspace/logs:/data/log
+        - docker-in-docker:/certs/client
+      ports:
+        - "9003:9003"
+      expose:
+        - "9000"
+      extra_hosts:
+        - "dockerhost:10.0.75.1"
+      environment:
+        - PHP_IDE_CONFIG=serverName=laradock
+        - DOCKER_HOST=tcp://docker-in-docker:2376
+        - DOCKER_TLS_VERIFY=1
+        - DOCKER_TLS_CERTDIR=/certs
+        - DOCKER_CERT_PATH=/certs/client
+        - FAKETIME=-0
+      networks:
+        - backend
+
+### NGINX Server #########################################
+    nginx:
+      build:
+        context: ./nginx
+        args:
+          - CHANGE_SOURCE=true
+          - PHP_UPSTREAM_CONTAINER=php-fpm
+          - PHP_UPSTREAM_PORT=9000
+          - http_proxy
+          - https_proxy
+          - no_proxy
+      container_name: "nginx"
+      volumes:
+        - ~/workspace/wpt:/www
+        - ~/workspace/logs/nginx:/www/logs/nginx
+        - ./nginx/sites:/etc/nginx/sites-available
+        - ./nginx/ssl/:/etc/nginx/ssl
+      ports:
+        - "80:80"
+        - "443:443"
+        - "81:81"
+      depends_on:
+        - php-fpm
+      networks:
+        - backend
+### Docker-in-Docker ################################################
+    docker-in-docker:
+      image: docker:19.03-dind
+      container_name: docker-in-docker
+      environment:
+        DOCKER_TLS_SAN: DNS:docker-in-docker
+      privileged: true
+      volumes:
+        - ~/workspace/wpt:/www
+      expose:
+        - 2375
+      networks:
+        - backend
