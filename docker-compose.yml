@@ -10,9 +10,15 @@ volumes:
 services:
 
 ### PHP-FPM ##############################################
+<<<<<<< HEAD
     php-fpm7.0:
       image: xuechaoc/wpt-php-7033:v1
       container_name: "php-fpm7.0"
+=======
+    php-fpm:
+      image: xuechaoc/wpt-php-7033:v1
+      container_name: "php-fpm"
+>>>>>>> 5751a9309124a7362a1a53c199ff8cdb3a0b67dc
       volumes:
         - ./php-fpm/php7.0.ini:/usr/local/etc/php/php.ini
         - ~/workspace/wpt:/www
