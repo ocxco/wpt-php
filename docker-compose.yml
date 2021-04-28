@@ -10,21 +10,43 @@ volumes:
 services:
 
 ### PHP-FPM ##############################################
-    php-fpm:
-      build:
-        context: ./php-fpm
-        args:
-          - http_proxy
-          - https_proxy
-          - no_proxy
-      container_name: "php-fpm"
+    php-fpm7.0:
+      image: xuechaoc/wpt-php-7033:v1
+      container_name: "php-fpm7.0"
       volumes:
         - ./php-fpm/php7.0.ini:/usr/local/etc/php/php.ini
-        - ~/workspace:/www
+        - ~/workspace/wpt:/www
         - ~/workspace/logs:/data/log
+        - ~/workspace/wpt/niffler:/niffler
         - docker-in-docker:/certs/client
       ports:
         - "9003:9003"
+      expose:
+        - "9000"
+      extra_hosts:
+        - "dockerhost:10.0.75.1"
+      environment:
+        - PHP_IDE_CONFIG=serverName=laradock
+        - DOCKER_HOST=tcp://docker-in-docker:2376
+        - DOCKER_TLS_VERIFY=1
+        - DOCKER_TLS_CERTDIR=/certs
+        - DOCKER_CERT_PATH=/certs/client
+        - FAKETIME=-0
+      networks:
+        - backend
+
+### PHP-FPM ##############################################
+    php-fpm7.2:
+      build: ./php-fpm7.2
+      container_name: "php-fpm7.2"
+      volumes:
+        - ./php-fpm/php7.0.ini:/usr/local/etc/php/php.ini
+        - ~/workspace/wpt:/www
+        - ~/workspace/logs:/data/log
+        - ~/workspace/wpt/niffler:/niffler
+        - docker-in-docker:/certs/client
+      ports:
+        - "9023:9003"
       expose:
         - "9000"
       extra_hosts:
@@ -45,7 +67,7 @@ services:
         context: ./nginx
         args:
           - CHANGE_SOURCE=true
-          - PHP_UPSTREAM_CONTAINER=php-fpm
+          - PHP_UPSTREAM_CONTAINER=php-fpm7.0
           - PHP_UPSTREAM_PORT=9000
           - http_proxy
           - https_proxy
@@ -61,7 +83,8 @@ services:
         - "443:443"
         - "81:81"
       depends_on:
-        - php-fpm
+        - php-fpm7.0
+        - php-fpm7.2
       networks:
         - backend
 ### Docker-in-Docker ################################################

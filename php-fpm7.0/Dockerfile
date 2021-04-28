@@ -99,6 +99,10 @@ RUN set -xe; \
 ###########################################################################
 RUN set -xe; php -v | head -n 1 | grep -q "PHP 7.0."
 
+########################## Composer ################################
+RUN curl -fSkL --retry 3 https://getcomposer.org/download/2.0.13/composer.phar -o /usr/local/bin/composer \
+    && chmod +x /usr/local/bin/composer
+
 #
 #--------------------------------------------------------------------------
 # Final Touch
